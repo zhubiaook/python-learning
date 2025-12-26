@@ -81,6 +81,80 @@ uv sync
 uv run christmas
 ```
 
+#### uv sync
+
+`uv sync` equals to `uv lock`, `uv venv`, `uv pip sync`, and `uv pip install -e .`.
+
+```bash
+# 1. RESOLVE (Update lockfile)
+# Checks pyproject.toml and generates a cross-platform uv.lock
+uv lock
+
+# 2. CREATE (Virtual Environment)
+# If .venv/ doesn't exist, create it
+uv venv
+
+# 3. SYNC (The "Destructive" Update)
+# Install missing packages AND uninstall packages not in the lock file
+uv pip sync uv.lock
+
+# 4. INSTALL (The Project)
+# Install the current project in "editable" mode
+uv pip install -e .
+```
+
+| Action | Standard `pip` workflow | `uv sync` |
+| --- | --- | --- |
+| **Locking** | Manual (`pip-compile`) | **Automatic** |
+| **Environment** | Manual (`python -m venv`) | **Automatic** (if missing) |
+| **Installing** | `pip install -r ...` | **Automatic** |
+| **Cleaning** | Manual (`pip uninstall`) | **Automatic** (Removes unused) |
+| **Project Setup** | `pip install -e .` | **Automatic** |
+
+#### uv run
+
+`uv run <command>` automatically ensures a proper environment before executing any command.
+
+```bash
+# Run script entry point
+uv run christmas
+
+# Run a Python script directly
+uv run python src/christmas/main.py
+
+# Run with arguments
+uv run christmas --config prod.yaml
+
+# Run any tool installed in the project
+uv run pytest
+uv run ruff check .
+```
+
+**What `uv run` does behind the scenes:**
+
+```bash
+# 1. CHECK (Environment)
+# Ensures .venv/ exists and is up-to-date with uv.lock
+
+# 2. SYNC (If Needed)
+# Automatically runs `uv sync` if dependencies are out of date
+
+# 3. ACTIVATE (Implicitly)
+# Runs the command within the virtual environment context
+
+# 4. EXECUTE
+# Runs your command with the correct Python and PATH
+```
+
+| Action | Standard workflow | `uv run` |
+| --- | --- | --- |
+| **Activate venv** | `source .venv/bin/activate` | **Automatic** |
+| **Sync deps** | Manual check | **Automatic** (if stale) |
+| **Run command** | `christmas` or `python script.py` | **Automatic** |
+| **Deactivate** | `deactivate` | **Not needed** |
+
+> **Tip:** Use `uv run` for one-off commands without activating the venv. Use `uv sync` + activate when doing extended development work.
+
 ---
 
 ## Production Deployment
